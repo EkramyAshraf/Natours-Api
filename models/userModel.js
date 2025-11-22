@@ -24,6 +24,7 @@ const userSchema = new mongoose.Schema(
     },
     passwordConfirm: {
       type: String,
+      select: false,
       required: [true, 'Please confirm your password'],
       validate: {
         validator: function (el) {
@@ -36,6 +37,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['user', 'admin', 'lead-guide', 'guide'],
       default: 'user',
+    },
+    active: {
+      type: Boolean,
+      default: true,
     },
     passwordChangedAt: Date,
     passwordResetToken: String,
@@ -76,9 +81,22 @@ userSchema.pre('save', async function (next) {
 
   //hash the password with cost 12
   this.password = await bcrypt.hash(this.password, 12);
-
   //delete passwordConfirm
   this.passwordConfirm = undefined;
+  next();
+});
+
+userSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
+  next();
+});
+
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) {
+    return next();
+  }
+
+  this.passwordChangedAt = Date.now() - 1000;
   next();
 });
 
@@ -94,14 +112,6 @@ userSchema.methods.createPasswordResetToken = function () {
 
   return resetToken;
 };
-
-userSchema.pre('save', function (next) {
-  if (!this.isModified('password') || this.isNew) {
-    return next();
-  }
-  this.passwordChangedAt = Date.now() - 1000;
-  next();
-});
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;

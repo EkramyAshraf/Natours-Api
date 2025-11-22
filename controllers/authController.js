@@ -1,9 +1,11 @@
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
+
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
-const AppError = require('../utils/appError');
 const sendEmail = require('../utils/email');
 
 const signToken = (id) => {
@@ -12,16 +14,32 @@ const signToken = (id) => {
   });
 };
 
-exports.signUp = catchAsync(async (req, res, next) => {
-  const newUser = await User.create(req.body);
-  const token = signToken(newUser._id);
-  res.status(201).json({
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true,
+  };
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+  res.cookie('jwt', token, cookieOptions);
+  // Remove password from output
+  user.password = undefined;
+  res.status(statusCode).json({
     status: 'success',
     token,
     data: {
-      user: newUser,
+      user,
     },
   });
+};
+
+exports.signUp = catchAsync(async (req, res, next) => {
+  const newUser = await User.create(req.body);
+  const token = signToken(newUser._id);
+
+  createSendToken(newUser, 201, res);
 });
 
 exports.logIn = catchAsync(async (req, res, next) => {
@@ -36,15 +54,7 @@ exports.logIn = catchAsync(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('Incorrect Email or Password', 400));
   }
-
-  const token = signToken(user._id);
-  res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: user,
-    },
-  });
+  createSendToken(user, 201, res);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -62,7 +72,6 @@ exports.protect = catchAsync(async (req, res, next) => {
       new AppError('You are not logged in, please login to get access', 401)
     );
   }
-
   // 2)verification token
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
@@ -122,11 +131,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       subject: 'Your password reset token (valid for 10 min)',
       message,
     });
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Token sent to email!',
-    });
+    createSendToken(user, 200, res);
   } catch (err) {
     user.passwordResetExpires = undefined;
     user.passwordResetToken = undefined;
@@ -149,7 +154,6 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     passwordResetToken: hashedToken,
     passwordResetExpires: { $gt: Date.now() },
   });
-  console.log(user);
   //2) if The token has not expired and user exists, set new password
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
@@ -160,9 +164,25 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   // 3) Update changedPasswordAt property for the user
 
   //4)Log the user in, send JWT
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+
+  createSendToken(user, 200, res);
+});
+
+//update current user password
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  //1)get user from collection when is logged in
+  const user = await User.findById(req.user.id).select('+password');
+  console.log(user);
+  //2)check if current password is correct
+  if (!(await bcrypt.compare(req.body.currentPassword, user.password))) {
+    return next(new AppError('your current password is wrong', 401));
+  }
+
+  //3)if so update password
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  await user.save();
+
+  //4)Log the user in, send JWT
+  createSendToken(user, 200, res);
 });

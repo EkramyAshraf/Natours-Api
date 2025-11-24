@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const hpp = require('hpp');
 const tourRouter = require('./routes/tourRouter');
 const userRouter = require('./routes/userRouter');
+const reviewRouter = require('./routes/reviewRouter');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 const dotenv = require('dotenv');
@@ -79,6 +80,7 @@ app.use((req, res, next) => {
 // 3) ROUTES
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/reviews', reviewRouter);
 
 app.use((req, res, next) => {
   next(new AppError(`can’t find ${req.originalUrl} on this server`, 404));

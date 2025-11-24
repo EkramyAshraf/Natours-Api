@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+const User = require('./userModel');
 const tourSchema = new mongoose.Schema(
   {
     name: {
@@ -27,6 +28,29 @@ const tourSchema = new mongoose.Schema(
         message: 'Difficulty is either: easy, medium, difficult',
       },
     },
+    startLocation: {
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
     ratingsAverage: {
       type: Number,
       default: 4.5,
@@ -60,10 +84,16 @@ const tourSchema = new mongoose.Schema(
       default: Date.now(),
     },
     startDates: [Date],
-    secretTout: {
+    secretTour: {
       type: Boolean,
       default: false,
     },
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
@@ -76,6 +106,11 @@ tourSchema.virtual('durationInWeeks').get(function () {
   return this.duration / 7;
 });
 
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
 //Document Middlewares
 tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, {
@@ -83,21 +118,33 @@ tourSchema.pre('save', function (next) {
   });
   next();
 });
-tourSchema.post('save', function (doc, next) {
-  console.log(doc);
-  next();
-});
+
+// tourSchema.pre('save', async function (next) {
+//   const getAllGuides = this.guides.map(async (id) => {
+//     return await User.findById(id);
+//   });
+//   this.guides = await Promise.all(getAllGuides);
+//   next();
+// });
 
 //Query Middleware
 tourSchema.pre(/^find/, function (next) {
-  this.find({ secretTout: { $ne: true } });
+  this.find({ secretTour: { $ne: true } });
+  next();
+});
+
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: 'name role -_id',
+  });
   next();
 });
 
 //Aggregation Middleware
 tourSchema.pre('aggregate', function (next) {
   this.pipeline().unshift({
-    $match: { secretTout: { $ne: true } },
+    $match: { secretTour: { $ne: true } },
   });
   next();
 });

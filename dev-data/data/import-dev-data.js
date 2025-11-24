@@ -12,9 +12,7 @@ mongoose.connect(DB, {}).then(() => {
   console.log('DB connection successful!');
 });
 //1) Read Json File
-const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/tours-simple.json`, 'utf-8')
-);
+const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`, 'utf-8'));
 
 //2) Import Data into Collection
 const importData = async () => {

@@ -77,11 +77,11 @@ exports.webhookCheckout = catchAsync(async (req, res, next) => {
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    return res.sendStatus(400).send(`⚠️  Webhook Error: ${err.message}`);
+    res.sendStatus(400).send(`⚠️  Webhook Error: ${err.message}`);
   }
 
   if (event.type === 'checkout.session.completed') {
-    createBookingCheckout(event.data.object);
+    await createBookingCheckout(event.data.object);
 
     res.status(200).json({
       received: true,

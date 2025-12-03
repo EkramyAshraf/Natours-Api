@@ -114,12 +114,11 @@ exports.webhookCheckout = catchAsync(async (req, res, next) => {
   }
 
   if (event.type === 'checkout.session.completed') {
-    // createCardOrder(event.data.object);
+    createCardOrder(event.data.object);
 
-    // res.status(200).json({
-    //   received: true,
-    // });
-    console.log(event);
+    res.status(200).json({
+      received: true,
+    });
   }
 });
 

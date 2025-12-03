@@ -1,3 +1,9 @@
+const { v4: uuidv4 } = require('uuid');
+const {
+  uploadSingleImage,
+  uploadMixOfImages,
+} = require('../utils/uploadImage');
+const sharp = require('sharp');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
@@ -19,7 +25,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   }
 
   //2)filter out unwanted fields
-  const filteredBody = filterObj(req.body, 'name', 'email');
+  const filteredBody = filterObj(req.body, 'name', 'email', 'photo');
 
   //3)update user document
   const updatedUser = await User.findByIdAndUpdate(req.user._id, filteredBody, {
@@ -52,3 +58,21 @@ exports.getUser = factory.getOne(User);
 exports.createUser = factory.createOne(User);
 exports.updateUser = factory.updateOne(User);
 exports.deleteUser = factory.deleteOne(User);
+
+exports.uploadUserPhoto = uploadSingleImage('photo');
+
+// @desc resize user images
+exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
+  //1)photo
+  if (!req.file) {
+    return next();
+  }
+  const userPhotoFileName = `user-${uuidv4()}-${Date.now()}.jpeg`;
+  await sharp(req.file.buffer)
+    .resize(500, 500)
+    .jpeg({ quality: 90 })
+    .toFile(`uploads/users/${userPhotoFileName}`);
+  req.body.photo = userPhotoFileName;
+
+  next();
+});

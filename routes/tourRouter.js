@@ -4,6 +4,13 @@ const tourController = require('../controllers/tourController');
 const reviewRouter = require('../routes/reviewRouter');
 const authController = require('../controllers/authController');
 
+router
+  .route('/tours-within/:distance/center/:latlng/unit/:unit')
+  .get(tourController.getToursWithin);
+// /tours-within?distance=233&center=-40,45&unit=mi
+// /tours-within/233/center/-40,45/unit/mi
+
+router.route('/distances/:latlng/unit/:unit').get(tourController.getDistances);
 router.use('/:tourId/reviews', reviewRouter);
 
 router
@@ -36,13 +43,17 @@ router
   .post(
     authController.protect,
     authController.restrictTo('admin', 'lead-guide'),
+    tourController.uploadTourImages,
+    tourController.resizeTourImages,
     tourController.createTour
   );
 router
   .route('/:id')
   .patch(
     authController.protect,
-    authController.restrictTo('admin', 'lead-guide'),
+    authController.restrictTo('admin', 'lead-guide', 'user'),
+    tourController.uploadTourImages,
+    tourController.resizeTourImages,
     tourController.updateTour
   )
   .get(tourController.getTour)

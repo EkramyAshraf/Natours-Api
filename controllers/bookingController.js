@@ -8,14 +8,15 @@ const factory = require('../controllers/handleFactory');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET);
 const Tour = require('../models/tourModel');
+const User = require('../models/userModel');
 const Booking = require('../models/bookingModel');
 
 exports.checkoutSession = catchAsync(async (req, res, next) => {
   //1)get cart based on cartId
-  const booking = await Booking.findById(req.params.bookingId);
+  const tour = await Tour.findById(req.params.tourId);
 
-  if (!booking) {
-    return next(new AppError('there is no booking for this ID', 400));
+  if (!tour) {
+    return next(new AppError('there is no tour for this ID', 400));
   }
 
   //2)create stripe checkout session
@@ -27,20 +28,18 @@ exports.checkoutSession = catchAsync(async (req, res, next) => {
           product_data: {
             name: `Order for ${req.user.name}`,
           },
-          unit_amount: booking.price * 100,
+          unit_amount: tour.price * 100,
         },
         quantity: 1,
       },
     ],
     mode: 'payment',
     success_url: `${req.protocol}://${req.get('host')}/my-tours/?tour=${
-      booking.tour.id
-    }&user=${req.user._id}&price=${booking.price}`,
-    cancel_url: `${req.protocol}://${req.get('host')}/tour/${
-      booking.tour.slug
-    }`,
+      tour.id
+    }&user=${req.user._id}&price=${tour.price}`,
+    cancel_url: `${req.protocol}://${req.get('host')}/tour/${tour.slug}`,
     customer_email: req.user.email,
-    client_reference_id: req.params.bookingId,
+    client_reference_id: req.params.tourId,
   });
 
   //4)send session to response
@@ -50,51 +49,19 @@ exports.checkoutSession = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.createBooking = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findById(req.params.tourId);
-  const booking = await Booking.create({
-    tour: req.params.tourId,
-    user: req.user._id,
-    price: tour.price,
-  });
-
-  res.status(201).json({
-    status: 'success',
-    data: booking,
-  });
-});
-
-const createCardOrder = async (session) => {
+const createBookingCheckout = async (session) => {
   const tourId = session.client_reference_id;
   const price = session.amount_total / 100;
 
   //1)get cart based on cartId
-  const booking = await Cart.findById(cartId);
   const user = await User.findOne({ email: session.customer_email });
 
   //2)create order with default payment type cash
-  const order = await Order.create({
+  const booking = await Booking.create({
     user: user._id,
-    cartItems: cart.cartItems,
-    shippingAddress,
-    totalOrderPrice: orderPrice,
-    isPaid: true,
-    paidAt: Date.now(),
-    paymentMethodType: 'card',
+    tour: tourId,
+    price,
   });
-
-  //4)after create order, increment product sold and decrement product quantity
-  if (order) {
-    const bulkOptions = cart.cartItems.map((item) => ({
-      updateOne: {
-        filter: { _id: item.product },
-        update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
-      },
-    }));
-    await Product.bulkWrite(bulkOptions, {});
-    //5) clear cart depend on cart Items
-    await Cart.findByIdAndDelete(cartId);
-  }
 };
 // @desc    This webhook will run when stripe payment success paid
 // @route   POST /webhook-checkout
@@ -114,7 +81,7 @@ exports.webhookCheckout = catchAsync(async (req, res, next) => {
   }
 
   if (event.type === 'checkout.session.completed') {
-    createCardOrder(event.data.object);
+    createBookingCheckout(event.data.object);
 
     res.status(200).json({
       received: true,

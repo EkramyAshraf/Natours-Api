@@ -34,7 +34,7 @@ exports.checkoutSession = catchAsync(async (req, res, next) => {
     ],
     mode: 'payment',
     success_url: `${req.protocol}://${req.get('host')}/my-tours/?tour=${
-      booking.tour._id
+      booking.tour.id
     }&user=${req.user._id}&price=${booking.price}`,
     cancel_url: `${req.protocol}://${req.get('host')}/tour/${
       booking.tour.slug

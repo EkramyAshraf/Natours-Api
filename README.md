@@ -8,6 +8,17 @@ A complete backend project built with **Node.js**, **Express**, **MongoDB**, and
 
 ---
 
+## 📖 Documentation
+
+You can browse the full API documentation (requests, responses, examples) online here:
+[🔗 View on Postman Documenter](https://documenter.getpostman.com/view/47866835/2sB3dPTWS8)
+
+Or click the button below to import the collection into your Postman workspace:
+
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://documenter.getpostman.com/view/47866835/2sB3dPTWS8)
+
+---
+
 ## 🚀 Features
 
 * User registration & login
@@ -163,6 +174,11 @@ Use **Postman** collection:
 ```
 /postman/Natours.postman_collection.json
 ```
+
+Or access the full online documentation:
+
+[🔗 View on Postman Documenter](https://documenter.getpostman.com/view/47866835/2sB3dPTWS8)
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://documenter.getpostman.com/view/47866835/2sB3dPTWS8)
 
 ---
 

@@ -1,20 +1,32 @@
 # 📘 Natours API
 
-RESTful API for managing tours, users, bookings, and authentication.
+RESTful API for managing **tours**, **users**, **bookings**, **reviews**, and **authentication**.
 
-A complete backend project built with **Node.js**, **Express**, **MongoDB**, and **Stripe**, following best practices for API design, security, and performance.
+A backend project built with **Node.js**, **Express**, **MongoDB**, and **Stripe**, following best practices for API design, security, and performance.
 
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge\&logo=node.js\&logoColor=white) ![Express](https://img.shields.io/badge/Express.js-000000?style=for-the-badge\&logo=express\&logoColor=white) ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge\&logo=mongodb\&logoColor=white) ![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge\&logo=json-web-tokens\&logoColor=white) ![Multer](https://img.shields.io/badge/Multer-CC0000?style=for-the-badge) ![Sharp](https://img.shields.io/badge/Sharp-00ADEF?style=for-the-badge) ![Dotenv](https://img.shields.io/badge/Dotenv-000000?style=for-the-badge) ![Stripe](https://img.shields.io/badge/Stripe-635BFF?style=for-the-badge\&logo=stripe\&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge\&logo=node.js\&logoColor=white)
+![Express](https://img.shields.io/badge/Express.js-000000?style=for-the-badge\&logo=express\&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge\&logo=mongodb\&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge\&logo=json-web-tokens\&logoColor=white)
+![Multer](https://img.shields.io/badge/Multer-CC0000?style=for-the-badge)
+![Sharp](https://img.shields.io/badge/Sharp-00ADEF?style=for-the-badge)
+![Dotenv](https://img.shields.io/badge/Dotenv-000000?style=for-the-badge)
+![Stripe](https://img.shields.io/badge/Stripe-635BFF?style=for-the-badge\&logo=stripe\&logoColor=white)
+![Railway](https://img.shields.io/badge/Deployed-Railway-FF55AA?style=for-the-badge)
+
+---
+
+## 🌐 Live Deployment
+
+The API is deployed and running on **Railway**:
+[🔗 Visit Live API](https://natours-api-production-dbf6.up.railway.app)
 
 ---
 
 ## 📖 Documentation
 
-You can browse the full API documentation (requests, responses, examples) online here:
-[🔗 View on Postman Documenter](https://documenter.getpostman.com/view/47866835/2sB3dPTWS8)
-
-Or click the button below to import the collection into your Postman workspace:
-
+Full API documentation is available via **Postman Documenter**:
+[🔗 View Documentation](https://documenter.getpostman.com/view/47866835/2sB3dPTWS8)
 [![Run in Postman](https://run.pstmn.io/button.svg)](https://documenter.getpostman.com/view/47866835/2sB3dPTWS8)
 
 ---
@@ -22,13 +34,12 @@ Or click the button below to import the collection into your Postman workspace:
 ## 🚀 Features
 
 * User registration & login
-* Password hashing & reset
 * JWT authentication
 * Role-based access (admin, guide, user)
 * CRUD operations for tours, users, reviews, bookings
+* Stripe payment integration
 * Image upload & processing
 * Data filtering, sorting, pagination
-* Stripe payment integration
 * Global error handling
 * Security best practices (Rate limiting, Helmet, Sanitization)
 
@@ -67,26 +78,25 @@ npm install
 Create a `.env` file in the root:
 
 ```
-NODE_ENV="development"
+NODE_ENV="development"   # Use 'production' when deploying to Railway
 PORT=3000
 DATABASE_PASSWORD=
-DATABASE=mongodb+srv://
-JWT_SECRET=
+DATABASE=mongodb+srv://<username>:<password>@cluster0.mongodb.net/dbname
+JWT_SECRET=<your_jwt_secret>
 JWT_EXPIRES_IN=90d
 JWT_COOKIE_EXPIRES_IN=90
 
-EMAIL_USERNAME=
-EMAIL_PASSWORD=
+EMAIL_USERNAME=<your_email>
+EMAIL_PASSWORD=<your_password>
 EMAIL_PORT=587
 EMAIL_HOST=sandbox.smtp.mailtrap.io
-EMAIL_FROM=
-STRIPE_SECRET=
-STRIPE_WEBHOOK_SECRET=
-
-SENDGRID_API_KEY=
+EMAIL_FROM=<from_email>
+STRIPE_SECRET=<stripe_secret>
+STRIPE_WEBHOOK_SECRET=<stripe_webhook_secret>
+SENDGRID_API_KEY=<your_sendgrid_key>
 ```
 
-> Example values can be added for testing, like a test MongoDB URI or Stripe sandbox keys.
+> Make sure to switch `NODE_ENV` to `production` when deploying.
 
 ---
 
@@ -108,16 +118,15 @@ npm start
 
 ## 🔐 Authentication & Payments Flow
 
-1. **Signup**
-2. **Login** → returns JWT
-3. **Protected routes** → require `Authorization: Bearer <token>`
-4. **Restricted routes** → only admins/guides
+1. **Signup / Login** → returns JWT
+2. **Protected routes** → require `Authorization: Bearer <token>`
+3. **Restricted routes** → only admins/guides can access certain endpoints
+4. **Stripe Payments** → for tour bookings
 5. **Password reset** (if implemented)
-6. **Stripe Payments** → integrate for bookings
 
 ---
 
-## 📡 API Endpoints (Example)
+## 📡 API Endpoints
 
 ### **Auth**
 
@@ -169,26 +178,16 @@ npm start
 
 ## 🧪 Testing
 
-Use **Postman** collection:
-
-```
-/postman/Natours.postman_collection.json
-```
-
-Or access the full online documentation:
-
-[🔗 View on Postman Documenter](https://documenter.getpostman.com/view/47866835/2sB3dPTWS8)
-[![Run in Postman](https://run.pstmn.io/button.svg)](https://documenter.getpostman.com/view/47866835/2sB3dPTWS8)
+Use the Postman collection linked above to test all endpoints with sample requests and responses.
 
 ---
 
 ## 📈 Roadmap
 
-* Add Stripe payment integration
-* Add booking system
-* Add email sending
-* Add rate reviews
-* Deploy on Railway
+* Add rate reviews & feedback
+* Improve booking system features
+* Implement email notifications for bookings
+* Deploy additional security measures
 
 ---
 
